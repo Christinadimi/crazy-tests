@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width-scale=1">
+<link rel="stylesheet" href="../normalize.css">
+<link rel="stylesheet" href="../styles.css">
+<script>
+   function checkAge() {
+     const age = prompt("Your age?", "") || "";
+
+      if (age > 25) {
+      alert("ti si na rabota"); 
+      } else if (age <25) {
+      alert ("ti si na uchilishte");
+      } else {
+      alert ("ti si na rabota i uchilishte");
+      }
+   }
+
+
+</script>
+<title> Neka vidim kude si sprqmo vuzrastta ti</title>
+</head>
+ <body> 
+<main>
+    <h1>Neka vidim kude si sprqmo vuzrastta ti</h1>
+    <h2> Aide natiskai kopcheto</h2>
+    <button onclick="checkAge()"> Age check</button>
+    <button onclick="Selection()">troll button</button>
+    <button oncanplay="Selection()"> ne si znam vuzrastta</button> 
+</main>
+ </body>
+</html>
