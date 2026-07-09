@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team Availability — 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     DESIGN TOKENS — "Planning ledger"
+     ============================================================ */
+  :root{
+    --paper:#F5F6F8;
+    --card:#FFFFFF;
+    --ink:#1B2233;
+    --ink-soft:#5A6172;
+    --ink-faint:#9AA0AE;
+    --line:#E4E6EC;
+    --line-strong:#CFD3DC;
+    --today:#EF4444;
+    --leave:#B45309;
+    --leave-wash:#FDF3E6;
+    --leave-line:#E9C08A;
+    --radius:10px;
+    --radius-sm:6px;
+    --shadow:0 1px 2px rgba(27,34,51,.04), 0 8px 24px -12px rgba(27,34,51,.12);
+
+    /* team hues */
+    --Engineering:#4F46E5;
+    --Design:#7C3AED;
+    --Product:#0D9488;
+    --Marketing:#E11D48;
+    --Data:#C2410C;
+    --Ops:#2563EB;
+
+    --disp:'Space Grotesk',system-ui,sans-serif;
+    --body:'Inter',system-ui,sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+
+    --px-day:3.4px;          /* timeline scale */
+    --name-w:172px;
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--body);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+    padding:34px 30px 80px;
+  }
+  .wrap{max-width:1220px;margin:0 auto}
+
+  /* ---------- Header ---------- */
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--ink-faint);margin:0 0 8px;
+  }
+  h1{
+    font-family:var(--disp);font-weight:700;font-size:40px;line-height:1;
+    margin:0 0 10px;letter-spacing:-.02em;
+  }
+  .lede{color:var(--ink-soft);font-size:15px;margin:0;max-width:60ch}
+
+  /* live totals */
+  .totals{display:flex;flex-wrap:wrap;gap:26px;margin:22px 0 4px}
+  .stat .n{font-family:var(--disp);font-weight:600;font-size:26px;line-height:1}
+  .stat .l{font-family:var(--mono);font-size:11px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--ink-faint);margin-top:5px}
+  .stat .n .u{font-size:14px;color:var(--ink-faint);font-weight:500;margin-left:3px}
+
+  /* ---------- Capacity ribbon ---------- */
+  .ribbon{
+    margin-top:24px;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius);padding:16px 18px 12px;box-shadow:var(--shadow);
+  }
+  .ribbon-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+  .ribbon-head .t{font-family:var(--mono);font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-soft)}
+  .ribbon-head .s{font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
+  .cap{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;align-items:end;height:66px}
+  .cap-col{display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+  .cap-bar{width:100%;max-width:40px;background:linear-gradient(180deg,var(--Ops),#4338CA);
+    border-radius:4px 4px 2px 2px;position:relative;transition:height .6s cubic-bezier(.2,.7,.3,1)}
+  .cap-bar span{position:absolute;top:-16px;left:50%;transform:translateX(-50%);
+    font-family:var(--mono);font-size:10px;color:var(--ink-soft)}
+  .cap-m{font-family:var(--mono);font-size:10px;color:var(--ink-faint);letter-spacing:.04em}
+
+  /* ---------- Controls ---------- */
+  .controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:26px 0 16px}
+  .seg{display:inline-flex;background:var(--card);border:1px solid var(--line-strong);
+    border-radius:var(--radius-sm);padding:3px;box-shadow:var(--shadow)}
+  .seg button{
+    font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--ink-soft);
+    background:none;border:none;padding:7px 14px;border-radius:4px;cursor:pointer;
+    transition:background .15s,color .15s}
+  .seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+  .seg button:focus-visible{outline:2px solid var(--Ops);outline-offset:2px}
+
+  .filter{display:inline-flex;align-items:center;gap:7px}
+  select,input[type="search"]{
+    font-family:var(--body);font-size:13px;color:var(--ink);
+    background:var(--card);border:1px solid var(--line-strong);
+    border-radius:var(--radius-sm);padding:8px 10px;box-shadow:var(--shadow)}
+  input[type="search"]{min-width:180px}
+  select:focus-visible,input:focus-visible{outline:2px solid var(--Ops);outline-offset:1px}
+  .spacer{flex:1}
+  .count-note{font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
+
+  /* ---------- Legend ---------- */
+  .legend{display:flex;flex-wrap:wrap;gap:18px;margin-bottom:14px;align-items:center}
+  .lg{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink-soft)}
+  .lg .sw{width:22px;height:12px;border-radius:3px}
+  .lg .sw.leave{background:var(--leave-wash);border:1px dashed var(--leave-line)}
+  .lg .sw.today{width:2px;height:15px;background:var(--today);border-radius:0}
+  .lg-teams{display:flex;gap:12px;flex-wrap:wrap;margin-left:auto}
+  .lg-team{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);
+    font-size:11px;color:var(--ink-soft)}
+  .lg-team .dot{width:10px;height:10px;border-radius:3px}
+
+  /* ============================================================
+     VIEW 1 — TIMELINE / GANTT
+     ============================================================ */
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden}
+  .tl-scroll{overflow-x:auto;overflow-y:hidden}
+  .tl-inner{position:relative}
+  .tl-monthrow{display:flex;position:sticky;top:0;z-index:5;background:var(--card);
+    border-bottom:1px solid var(--line-strong)}
+  .tl-corner{width:var(--name-w);flex:0 0 var(--name-w);position:sticky;left:0;z-index:6;
+    background:var(--card);border-right:1px solid var(--line-strong);
+    font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink-faint);padding:14px 16px}
+  .tl-month{flex:0 0 auto;padding:12px 8px;border-right:1px solid var(--line);
+    font-family:var(--disp);font-weight:500;font-size:13px}
+  .tl-month .d{font-family:var(--mono);font-size:10px;color:var(--ink-faint);
+    font-weight:400;margin-left:5px}
+  .tl-row{display:flex;align-items:stretch;border-bottom:1px solid var(--line);height:54px}
+  .tl-row:last-child{border-bottom:none}
+  .tl-name{width:var(--name-w);flex:0 0 var(--name-w);position:sticky;left:0;z-index:3;
+    background:var(--card);border-right:1px solid var(--line-strong);
+    padding:9px 16px;display:flex;flex-direction:column;justify-content:center}
+  .tl-name .nm{font-family:var(--disp);font-weight:600;font-size:14px;display:flex;align-items:center;gap:7px}
+  .tl-name .nm .dot{width:8px;height:8px;border-radius:2px;flex:0 0 8px}
+  .tl-name .tm{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);
+    letter-spacing:.04em;margin-top:2px;padding-left:15px}
+  .tl-track{flex:0 0 auto;position:relative;
+    background-image:repeating-linear-gradient(90deg,transparent,transparent calc(var(--month-avg) - 1px),var(--line) calc(var(--month-avg) - 1px),var(--line) var(--month-avg))}
+  .bar{position:absolute;top:9px;height:24px;border-radius:5px;display:flex;align-items:center;
+    padding:0 9px;color:#fff;font-family:var(--mono);font-size:11px;font-weight:500;
+    white-space:nowrap;overflow:hidden;cursor:default;
+    box-shadow:0 1px 2px rgba(0,0,0,.15);transition:filter .15s,transform .15s}
+  .bar:hover{filter:brightness(1.06);transform:translateY(-1px)}
+  .bar .rg{opacity:.72;margin-left:7px;font-weight:400}
+  .tl-track .leave{position:absolute;top:11px;height:20px;border-radius:5px;
+    background:var(--leave-wash);border:1px dashed var(--leave-line);
+    display:flex;align-items:center;padding:0 8px;color:var(--leave);
+    font-family:var(--mono);font-size:10.5px;font-weight:500;white-space:nowrap;overflow:hidden}
+  .today-line{position:absolute;top:0;bottom:0;width:2px;background:var(--today);z-index:4}
+  .today-flag{position:absolute;top:2px;transform:translateX(-50%);z-index:7;
+    font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--today);
+    background:var(--card);padding:0 4px;font-weight:600}
+
+  /* ============================================================
+     VIEW 2 — HEATMAP GRID
+     ============================================================ */
+  .hm-scroll{overflow-x:auto}
+  .hm-inner{position:relative}
+  .hm-monthrow,.hm-row{display:flex}
+  .hm-monthrow{position:sticky;top:0;z-index:5;background:var(--card);
+    border-bottom:1px solid var(--line-strong)}
+  .hm-corner{width:var(--name-w);flex:0 0 var(--name-w);position:sticky;left:0;z-index:6;
+    background:var(--card);border-right:1px solid var(--line-strong);
+    font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink-faint);padding:12px 16px}
+  .hm-mcell{flex:0 0 auto;font-family:var(--disp);font-size:11.5px;font-weight:500;
+    padding:12px 0 12px 4px;border-right:1px solid var(--line)}
+  .hm-row{border-bottom:1px solid var(--line);height:34px}
+  .hm-row:last-child{border-bottom:none}
+  .hm-name{width:var(--name-w);flex:0 0 var(--name-w);position:sticky;left:0;z-index:3;
+    background:var(--card);border-right:1px solid var(--line-strong);
+    display:flex;align-items:center;gap:7px;padding:0 16px;
+    font-family:var(--disp);font-weight:600;font-size:13px}
+  .hm-name .dot{width:8px;height:8px;border-radius:2px;flex:0 0 8px}
+  .hm-cells{display:flex}
+  .hm-cell{width:15px;height:34px;border-right:1px solid rgba(228,230,236,.5);position:relative}
+  .hm-cell.busy{}
+  .hm-cell.leave{background:repeating-linear-gradient(45deg,var(--leave-wash),var(--leave-wash) 3px,#F6E4C8 3px,#F6E4C8 6px)}
+  .hm-cell.today-col{box-shadow:inset 2px 0 0 var(--today)}
+  .hm-cell:hover{outline:2px solid var(--ink);outline-offset:-2px;z-index:2}
+
+  /* ============================================================
+     VIEW 3 — CARDS
+     ============================================================ */
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+  .pcard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px 18px 16px;box-shadow:var(--shadow);border-top:3px solid var(--tc,#999)}
+  .pc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:2px}
+  .pc-name{font-family:var(--disp);font-weight:600;font-size:16px}
+  .pc-team{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);letter-spacing:.05em}
+  .badge{font-family:var(--mono);font-size:10px;letter-spacing:.04em;padding:4px 8px;
+    border-radius:20px;white-space:nowrap;font-weight:500}
+  .badge.busy{background:#EEF0FE;color:#3730A3}
+  .badge.free{background:#E7F6EF;color:#0B7A4B}
+  .badge.leave{background:var(--leave-wash);color:var(--leave)}
+  .pc-rows{margin-top:14px;display:flex;flex-direction:column;gap:0}
+  .pc-line{display:flex;justify-content:space-between;align-items:baseline;
+    padding:9px 0;border-top:1px solid var(--line)}
+  .pc-line .k{font-size:12.5px;color:var(--ink-soft)}
+  .pc-line .v{font-family:var(--mono);font-size:12.5px;font-weight:500}
+  .pc-proj{font-family:var(--disp);font-weight:500}
+
+  .empty{padding:60px 20px;text-align:center;color:var(--ink-faint);
+    font-family:var(--mono);font-size:13px}
+
+  /* ---------- Footer note ---------- */
+  .note{margin-top:26px;padding:16px 18px;border-left:3px solid var(--leave-line);
+    background:var(--leave-wash);border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+    font-size:13.5px;color:#7A4E14;max-width:900px}
+  .note b{color:var(--leave)}
+
+  .hidden{display:none !important}
+
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important}
+  }
+  @media (max-width:640px){
+    body{padding:22px 16px 60px}
+    h1{font-size:30px}
+    .lg-teams{margin-left:0;width:100%}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Team planning · 2026</p>
+  <h1>Team Availability</h1>
+  <p class="lede">Project commitments and suggested 10-day leave windows across the year. Switch views to see the same data as a timeline, a density grid, or per-person cards.</p>
+
+  <div class="totals" id="totals"></div>
+
+  <!-- Capacity ribbon -->
+  <div class="ribbon">
+    <div class="ribbon-head">
+      <span class="t">Monthly capacity — people committed</span>
+      <span class="s" id="capMax"></span>
+    </div>
+    <div class="cap" id="cap"></div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <div class="seg" role="group" aria-label="View">
+      <button data-view="timeline" aria-pressed="true">Timeline</button>
+      <button data-view="heatmap" aria-pressed="false">Heatmap</button>
+      <button data-view="cards" aria-pressed="false">Cards</button>
+    </div>
+    <div class="filter">
+      <select id="teamFilter" aria-label="Filter by team"></select>
+    </div>
+    <div class="filter">
+      <select id="statusFilter" aria-label="Filter by status">
+        <option value="all">All statuses</option>
+        <option value="busy">On a project</option>
+        <option value="free">Free now</option>
+        <option value="leave">On leave</option>
+      </select>
+    </div>
+    <input type="search" id="search" placeholder="Search name…" aria-label="Search by name">
+    <span class="spacer"></span>
+    <span class="count-note" id="countNote"></span>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <span class="lg"><span class="sw" style="background:var(--Ops)"></span> On a project</span>
+    <span class="lg"><span class="sw leave"></span> Suggested / planned leave</span>
+    <span class="lg"><span class="sw today"></span> Today</span>
+    <span class="lg-teams" id="teamLegend"></span>
+  </div>
+
+  <!-- VIEW: TIMELINE -->
+  <div class="panel" id="view-timeline">
+    <div class="tl-scroll"><div class="tl-inner" id="tlInner"></div></div>
+  </div>
+
+  <!-- VIEW: HEATMAP -->
+  <div class="panel hidden" id="view-heatmap">
+    <div class="hm-scroll"><div class="hm-inner" id="hmInner"></div></div>
+  </div>
+
+  <!-- VIEW: CARDS -->
+  <div class="hidden" id="view-cards">
+    <div class="cards" id="cardsWrap"></div>
+  </div>
+
+  <div class="note" id="note"></div>
+
+</div>
+
+<script>
+/* =================================================================
+   DATA
+   -----------------------------------------------------------------
+   This is DUMMY data for testing the layout. To use real data,
+   replace the PEOPLE array below. Each person is:
+     {
+       name:  "Full Name",
+       team:  "Engineering" | "Design" | "Product" | "Marketing" | "Data" | "Ops",
+       projects: [ { name:"Project name", start:"YYYY-MM-DD", end:"YYYY-MM-DD" }, ... ],
+       leave:    [ { start:"YYYY-MM-DD", end:"YYYY-MM-DD", type:"planned" }, ... ]  // optional
+     }
+   A "suggested" 10-day leave window is auto-computed after each
+   person's current/next project if you don't supply planned leave.
+   ================================================================= */
+
+const YEAR = 2026;
+const TODAY = new Date(2026, 6, 9);           // 9 Jul 2026 (matches "today" for the demo)
+const TEAMS = ["Engineering","Design","Product","Marketing","Data","Ops"];
+
+/* ---- deterministic pseudo-random so the demo is stable ---- */
+let _seed = 20260709;
+function rnd(){ _seed = (_seed*1103515245 + 12345) & 0x7fffffff; return _seed/0x7fffffff; }
+function pick(a){ return a[Math.floor(rnd()*a.length)]; }
+function rint(lo,hi){ return lo + Math.floor(rnd()*(hi-lo+1)); }
+
+const NAMES = [
+  ["Ivan Petrov","Engineering"],["Maria Kostova","Design"],["John Reeves","Product"],
+  ["Elena Dimitrova","Engineering"],["Marco Ferrari","Data"],["Aisha Rahman","Marketing"],
+  ["Tomas Novak","Engineering"],["Sofia Alvarez","Design"],["David Chen","Product"],
+  ["Nadia Haddad","Ops"],["Lukas Weber","Engineering"],["Priya Nair","Data"],
+  ["Oliver Grant","Marketing"],["Yuki Tanaka","Design"],["Grace Okafor","Product"],
+  ["Petar Iliev","Engineering"],["Camila Rossi","Ops"],["Hassan Ali","Data"],
+  ["Freya Lindqvist","Design"],["Sam Whitfield","Product"],["Ana Marković","Marketing"],
+  ["Dmitri Volkov","Engineering"],["Leila Farhadi","Ops"],["Ben Carter","Data"],
+  ["Ingrid Sørensen","Design"],["Rafael Souza","Product"],["Chloe Dubois","Marketing"],
+];
+
+const CODENAMES = ["Atlas","Nimbus","Orion","Helix","Vertex","Beacon","Cascade","Quartz",
+  "Ember","Cobalt","Aurora","Pioneer","Summit","Harbor","Lumen","Forge","Kepler","Onyx",
+  "Marlin","Cypress","Zephyr","Meridian","Foundry","Compass","Tidal","Sable"];
+const SUFFIX = {
+  Engineering:["Platform","Migration","API","Infra","Rewrite"],
+  Design:["System","Redesign","Rebrand","Toolkit"],
+  Product:["Launch","Rollout","Discovery","Beta"],
+  Marketing:["Campaign","Launch","Push"],
+  Data:["Pipeline","Model","Warehouse","Dashboard"],
+  Ops:["Rollout","Onboarding","Program"]
+};
+
+function iso(d){ return d.toISOString().slice(0,10); }
+function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+
+/* build dummy projects across the year for one person */
+function genProjects(team){
+  const projects=[];
+  let cursor = rint(0,50);                 // first project may start a bit into the year
+  const nProj = rint(1,3);
+  const usedCode = new Set();
+  for(let i=0;i<nProj;i++){
+    const dur = rint(28,120);
+    if(cursor + dur > 360) break;
+    let code; do{ code=pick(CODENAMES); }while(usedCode.has(code));
+    usedCode.add(code);
+    const start = new Date(YEAR,0,1+cursor);
+    const end   = addDays(start, dur-1);
+    projects.push({ name: code+" "+pick(SUFFIX[team]), start:iso(start), end:iso(end) });
+    cursor += dur + rint(12,55);           // gap before next project
+  }
+  return projects;
+}
+
+const PEOPLE = NAMES.map(([name,team])=>{
+  const projects = genProjects(team);
+  const leave = [];
+  // ~1 in 4 people have an explicit planned holiday somewhere in a gap
+  if(rnd()<0.28 && projects.length){
+    const p = projects[rint(0,projects.length-1)];
+    const s = addDays(new Date(p.end), rint(6,20));
+    if(s.getFullYear()===YEAR) leave.push({start:iso(s),end:iso(addDays(s,rint(7,13))),type:"planned"});
+  }
+  return { name, team, projects, leave };
+});
+
+/* =================================================================
+   DATE / GEOMETRY HELPERS
+   ================================================================= */
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const MONTH_DAYS = [31,28,31,30,31,30,31,31,30,31,30,31];   // 2026 not a leap year
+const YEAR_DAYS = MONTH_DAYS.reduce((a,b)=>a+b,0);          // 365
+const PXDAY = 3.4;
+const TRACK_W = YEAR_DAYS*PXDAY;
+
+function D(s){ return new Date(s+"T00:00:00"); }
+function dayOfYear(d){                                       // 0-indexed
+  const start=new Date(d.getFullYear(),0,1);
+  return Math.round((d-start)/86400000);
+}
+function clampYear(d){
+  if(d.getFullYear()<YEAR) return new Date(YEAR,0,1);
+  if(d.getFullYear()>YEAR) return new Date(YEAR,11,31);
+  return d;
+}
+function fmt(d){ return MONTHS[d.getMonth()]+" "+d.getDate(); }
+function daysBetween(a,b){ return Math.round((b-a)/86400000)+1; }
+
+/* compute derived availability facts for a person */
+function derive(p){
+  // current project = one overlapping today; else next upcoming; else last finished
+  let current=null, next=null, last=null;
+  p.projects.forEach(pr=>{
+    const s=D(pr.start), e=D(pr.end);
+    if(s<=TODAY && TODAY<=e) current=pr;
+    if(s>TODAY && (!next || D(pr.start)<D(next.start))) next=pr;
+    if(e<TODAY && (!last || D(pr.end)>D(last.end))) last=pr;
+  });
+  const primary = current||next||last||null;
+
+  // status today
+  let status="free", statusLabel="Free now";
+  const onLeave = p.leave.find(l=> D(l.start)<=TODAY && TODAY<=D(l.end));
+  if(onLeave){ status="leave"; statusLabel="On leave"; }
+  else if(current){ status="busy"; statusLabel="On a project"; }
+
+  // suggested leave: 10 days starting the day after the primary project ends
+  let suggested=null;
+  if(primary){
+    const freeFrom = addDays(D(primary.end),1);
+    if(freeFrom.getFullYear()<=YEAR){
+      const ff = clampYear(freeFrom);
+      suggested = { start:ff, end:addDays(ff,9) };
+    }
+  }
+  const busyDays = primary ? daysBetween(D(primary.start),D(primary.end)) : 0;
+  const freeFrom = primary ? addDays(D(primary.end),1) : null;
+
+  return { current,next,last,primary,status,statusLabel,suggested,busyDays,freeFrom,onLeave };
+}
+
+/* build a per-day state array (for heatmap + capacity) : 'busy'|'leave'|'free' */
+function dayStates(p){
+  const arr=new Array(YEAR_DAYS).fill("free");
+  p.projects.forEach(pr=>{
+    const s=Math.max(0,dayOfYear(clampYear(D(pr.start))));
+    const e=Math.min(YEAR_DAYS-1,dayOfYear(clampYear(D(pr.end))));
+    for(let i=s;i<=e;i++) arr[i]="busy";
+  });
+  const d=derive(p);
+  const leaves=[...p.leave.map(l=>({s:D(l.start),e:D(l.end)}))];
+  if(d.suggested) leaves.push({s:d.suggested.start,e:d.suggested.end});
+  leaves.forEach(l=>{
+    const s=Math.max(0,dayOfYear(clampYear(l.s)));
+    const e=Math.min(YEAR_DAYS-1,dayOfYear(clampYear(l.e)));
+    for(let i=s;i<=e;i++) if(arr[i]==="free") arr[i]="leave";
+  });
+  return arr;
+}
+
+/* =================================================================
+   STATE + FILTERING
+   ================================================================= */
+let currentView="timeline";
+const state={team:"all",status:"all",q:""};
+
+function filtered(){
+  return PEOPLE.filter(p=>{
+    if(state.team!=="all" && p.team!==state.team) return false;
+    if(state.q && !p.name.toLowerCase().includes(state.q.toLowerCase())) return false;
+    if(state.status!=="all" && derive(p).status!==state.status) return false;
+    return true;
+  });
+}
+
+/* =================================================================
+   RENDER: header totals + capacity ribbon (always full team)
+   ================================================================= */
+function renderTotals(){
+  let busy=0,free=0,leave=0;
+  PEOPLE.forEach(p=>{ const s=derive(p).status; if(s==="busy")busy++; else if(s==="leave")leave++; else free++; });
+  document.getElementById("totals").innerHTML=[
+    ["People",PEOPLE.length,""],
+    ["On a project",busy,""],
+    ["Free now",free,""],
+    ["On leave",leave,""]
+  ].map(([l,n])=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");
+}
+
+function renderCapacity(){
+  const counts=new Array(12).fill(0);
+  // count a person as committed in a month if any project day falls in it
+  PEOPLE.forEach(p=>{
+    const busySet=new Set();
+    p.projects.forEach(pr=>{
+      let s=clampYear(D(pr.start)), e=clampYear(D(pr.end));
+      for(let m=0;m<12;m++){
+        const ms=new Date(YEAR,m,1), me=new Date(YEAR,m,MONTH_DAYS[m]);
+        if(s<=me && e>=ms) busySet.add(m);
+      }
+    });
+    busySet.forEach(m=>counts[m]++);
+  });
+  const max=Math.max(...counts,1);
+  document.getElementById("capMax").textContent="peak "+max+" of "+PEOPLE.length;
+  document.getElementById("cap").innerHTML=counts.map((c,m)=>`
+    <div class="cap-col">
+      <div class="cap-bar" style="height:${Math.max(6,(c/max)*100)}%"><span>${c}</span></div>
+      <div class="cap-m">${MONTHS[m]}</div>
+    </div>`).join("");
+}
+
+/* =================================================================
+   RENDER: TIMELINE
+   ================================================================= */
+function monthHeader(prefix){
+  let html=`<div class="${prefix}-corner">Team</div>`;
+  MONTH_DAYS.forEach((d,m)=>{
+    const w=d*PXDAY;
+    html+=`<div class="${prefix==='tl'?'tl-month':'hm-mcell'}" style="width:${w}px">${MONTHS[m]}<span class="d">${d}d</span></div>`;
+  });
+  return html;
+}
+
+function renderTimeline(list){
+  const inner=document.getElementById("tlInner");
+  let html=`<div class="tl-monthrow">${monthHeader("tl")}</div>`;
+  list.forEach(p=>{
+    const d=derive(p);
+    let bars="";
+    p.projects.forEach(pr=>{
+      const s=clampYear(D(pr.start)), e=clampYear(D(pr.end));
+      const left=dayOfYear(s)*PXDAY;
+      const w=Math.max(daysBetween(s,e)*PXDAY,26);
+      const wide=w>96;
+      bars+=`<div class="bar" style="left:${left}px;width:${w}px;background:var(--${p.team})"
+        title="${pr.name} · ${fmt(D(pr.start))} – ${fmt(D(pr.end))}">
+        ${wide?pr.name:''}${wide?`<span class="rg">${fmt(D(pr.start))}–${fmt(D(pr.end))}</span>`:'•'}</div>`;
+    });
+    // leaves (planned + suggested)
+    const leaves=[...p.leave.map(l=>({s:D(l.start),e:D(l.end)}))];
+    if(d.suggested) leaves.push({s:d.suggested.start,e:d.suggested.end});
+    leaves.forEach(l=>{
+      const s=clampYear(l.s), e=clampYear(l.e);
+      const left=dayOfYear(s)*PXDAY;
+      const w=Math.max(daysBetween(s,e)*PXDAY,30);
+      bars+=`<div class="leave" style="left:${left}px;width:${w}px"
+        title="Leave · ${fmt(l.s)} – ${fmt(l.e)}">${w>52?'Leave':'🌴'}</div>`;
+    });
+    html+=`<div class="tl-row">
+      <div class="tl-name">
+        <span class="nm"><span class="dot" style="background:var(--${p.team})"></span>${p.name}</span>
+        <span class="tm">${p.team}</span>
+      </div>
+      <div class="tl-track" style="width:${TRACK_W}px;--month-avg:${(TRACK_W/12).toFixed(2)}px">${bars}</div>
+    </div>`;
+  });
+  inner.innerHTML=html;
+  // today overlay (spans all rows)
+  const todayX=dayOfYear(TODAY)*PXDAY;
+  const line=document.createElement("div");
+  line.className="today-line";
+  line.style.left=`calc(var(--name-w) + ${todayX}px)`;
+  inner.appendChild(line);
+  const flag=document.createElement("div");
+  flag.className="today-flag";
+  flag.style.left=`calc(var(--name-w) + ${todayX}px)`;
+  flag.textContent="TODAY";
+  inner.appendChild(flag);
+}
+
+/* =================================================================
+   RENDER: HEATMAP  (52 week columns)
+   ================================================================= */
+const WEEKS=53;
+function renderHeatmap(list){
+  const inner=document.getElementById("hmInner");
+  const cellW=15;
+  // month header spanning weeks
+  let head=`<div class="hm-corner">Team · weeks</div>`;
+  for(let m=0;m<12;m++){
+    const w=MONTH_DAYS[m]*PXDAY* (cellW*7/(PXDAY*7)); // keep header aligned to 7-day cells
+  }
+  // simpler: header labels every ~4 weeks aligned to cell grid
+  let hdr=`<div class="hm-corner">Team · weeks</div><div class="hm-cells">`;
+  for(let w=0;w<WEEKS;w++){
+    const dayStart=w*7;
+    const month=(()=>{ let acc=0; for(let m=0;m<12;m++){ acc+=MONTH_DAYS[m]; if(dayStart<acc) return m; } return 11; })();
+    const firstOfMonth = w===0 || (()=>{ let acc=0; for(let m=0;m<month;m++)acc+=MONTH_DAYS[m]; return dayStart<acc+7 && dayStart>=acc; })();
+    hdr+=`<div class="hm-mcell" style="width:${cellW}px;border-right:none;padding:12px 0 12px 2px;font-size:10px;color:${firstOfMonth?'var(--ink)':'transparent'}">${firstOfMonth?MONTHS[month]:'·'}</div>`;
+  }
+  hdr+=`</div>`;
+  let html=`<div class="hm-monthrow">${hdr}</div>`;
+
+  const todayWeek=Math.floor(dayOfYear(TODAY)/7);
+  list.forEach(p=>{
+    const states=dayStates(p);
+    let cells="";
+    for(let w=0;w<WEEKS;w++){
+      // dominant state in this week
+      let busy=0,leave=0;
+      for(let i=0;i<7;i++){ const di=w*7+i; if(di>=YEAR_DAYS)break; if(states[di]==="busy")busy++; else if(states[di]==="leave")leave++; }
+      let cls="", style="", title="Free";
+      if(busy>=leave && busy>0){ cls="busy"; style=`background:var(--${p.team})`; title="On a project"; }
+      else if(leave>0){ cls="leave"; title="Leave"; }
+      if(w===todayWeek) cls+=" today-col";
+      cells+=`<div class="hm-cell ${cls}" style="width:${cellW}px;${style}" title="Week ${w+1} · ${title}"></div>`;
+    }
+    html+=`<div class="hm-row">
+      <div class="hm-name"><span class="dot" style="background:var(--${p.team})"></span>${p.name}</div>
+      <div class="hm-cells">${cells}</div>
+    </div>`;
+  });
+  inner.innerHTML=html;
+}
+
+/* =================================================================
+   RENDER: CARDS
+   ================================================================= */
+function renderCards(list){
+  const wrap=document.getElementById("cardsWrap");
+  if(!list.length){ wrap.innerHTML=`<div class="empty">No one matches these filters.</div>`; return; }
+  wrap.innerHTML=list.map(p=>{
+    const d=derive(p);
+    const proj=d.primary;
+    const projRange = proj ? `${fmt(D(proj.start))} – ${fmt(D(proj.end))}` : "—";
+    const projName = proj ? proj.name : "No project scheduled";
+    const freeFrom = d.freeFrom ? fmt(d.freeFrom) : "Now";
+    const sugg = d.suggested ? `${fmt(d.suggested.start)} – ${fmt(d.suggested.end)}` : "—";
+    return `<div class="pcard" style="--tc:var(--${p.team})">
+      <div class="pc-head">
+        <div>
+          <div class="pc-name">${p.name}</div>
+          <div class="pc-team">${p.team}</div>
+        </div>
+        <span class="badge ${d.status}">${d.statusLabel}</span>
+      </div>
+      <div class="pc-rows">
+        <div class="pc-line"><span class="k pc-proj">${projName}</span><span class="v">${projRange}</span></div>
+        <div class="pc-line"><span class="k">Busy for</span><span class="v">${d.busyDays?d.busyDays+" days":"—"}</span></div>
+        <div class="pc-line"><span class="k">Free from</span><span class="v">${freeFrom}</span></div>
+        <div class="pc-line"><span class="k">Suggested leave</span><span class="v">${sugg}</span></div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+/* =================================================================
+   ORCHESTRATION
+   ================================================================= */
+function renderCurrent(){
+  const list=filtered();
+  document.getElementById("countNote").textContent=`${list.length} of ${PEOPLE.length} people`;
+  if(currentView==="timeline"){ if(list.length) renderTimeline(list); else document.getElementById("tlInner").innerHTML=`<div class="empty">No one matches these filters.</div>`; }
+  else if(currentView==="heatmap"){ if(list.length) renderHeatmap(list); else document.getElementById("hmInner").innerHTML=`<div class="empty">No one matches these filters.</div>`; }
+  else renderCards(list);
+}
+
+function switchView(v){
+  currentView=v;
+  document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.view===v));
+  document.getElementById("view-timeline").classList.toggle("hidden",v!=="timeline");
+  document.getElementById("view-heatmap").classList.toggle("hidden",v!=="heatmap");
+  document.getElementById("view-cards").classList.toggle("hidden",v!=="cards");
+  renderCurrent();
+}
+
+/* build team filter + legend */
+function buildChrome(){
+  const tf=document.getElementById("teamFilter");
+  tf.innerHTML=`<option value="all">All teams</option>`+TEAMS.map(t=>`<option value="${t}">${t}</option>`).join("");
+  document.getElementById("teamLegend").innerHTML=TEAMS.map(t=>
+    `<span class="lg-team"><span class="dot" style="background:var(--${t})"></span>${t}</span>`).join("");
+  // footer note
+  const firstFree=[...PEOPLE].map(p=>({n:p.name,d:derive(p).freeFrom})).filter(x=>x.d).sort((a,b)=>a.d-b.d)[0];
+  document.getElementById("note").innerHTML=`Suggested leave windows are the earliest <b>10-day slots</b> after each person's current project, so no one is pencilled in for leave while committed.${firstFree?` <b>${firstFree.n}</b> frees up first (${fmt(firstFree.d)}).`:''} Replace the <b>PEOPLE</b> array at the top of the file's script with your real data when you're ready.`;
+}
+
+/* events */
+document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>switchView(b.dataset.view)));
+document.getElementById("teamFilter").addEventListener("change",e=>{state.team=e.target.value;renderCurrent();});
+document.getElementById("statusFilter").addEventListener("change",e=>{state.status=e.target.value;renderCurrent();});
+document.getElementById("search").addEventListener("input",e=>{state.q=e.target.value;renderCurrent();});
+
+/* init */
+buildChrome();
+renderTotals();
+renderCapacity();
+switchView("timeline");
+</script>
+</body>
+</html>
